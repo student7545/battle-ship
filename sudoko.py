@@ -12,7 +12,7 @@ RED = (255, 0, 0)
 FPS = 60
 HEIGHT, WIDTH = 900, 900
 SHIP_SIZE = (50, 50)
-red_bullet = 100
+red_bullet = 200
 yellow_bullet = 100000
 YELLOW_LIVES = 10
 RED_LIVES = 10
@@ -44,7 +44,8 @@ red_bullet_count = font.render(F"{red_bullet}", True, WHITE)
 yellow_bullet_count = font.render(f"{yellow_bullet}", True, WHITE)
 font_yellow_lives = font.render(f"LIVES {YELLOW_LIVES}",True,WHITE)
 font_red_lives = font.render(f"LIVES {RED_LIVES}",True,WHITE)
-
+game_over = font.render(f"YOU WIN",True,WHITE)
+COMPUTER_WON = font.render(f"COMPUTER WON",True,WHITE)
 
 def yellow_ship_shoot(location_red_ship, location_yellow_ship):
     if location_red_ship[1] == location_yellow_ship[1]:
@@ -54,12 +55,14 @@ def yellow_ship_shoot(location_red_ship, location_yellow_ship):
     else:
         return None
 
-def shoot_bullet(events):
+def shoot_bullet(events,sound):
     bullet = None
     for event in events:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            sound.play()
             bullet = pygame.Surface((5, 5))
             bullet.fill(RED)
+            # sound.stop()
     return bullet
 
 def move_bullets(bullets_fired):
@@ -108,7 +111,13 @@ def yellow_ship_movement(location_red_ship, location_yellow_ship):
 
 def main():
     global red_bullet, yellow_bullet, red_bullet_count, yellow_bullet_count, RED_LIVES, YELLOW_LIVES
-    global font_red_lives, font_yellow_lives, DIFFCULTY_LEVEL
+    global font_red_lives, font_yellow_lives, DIFFCULTY_LEVEL,game_over,COMPUTER_WON
+
+    # sound codes
+    sound_path = os.path.join("Assets","Grenade+1.mp3")
+    pygame.mixer.init()
+    sound = pygame.mixer.Sound(sound_path)
+
     ship_location = [0, 450]  # YELLOW SHIP IS THE ONE ON THE LEFT
     RED_LOCATION = [850, 450]  # RED SHIP IS THE ONE ON THE RIGHT
     clock = pygame.time.Clock()
@@ -132,7 +141,7 @@ def main():
         red_rect = pygame.Rect(RED_LOCATION[0], RED_LOCATION[1], SHIP_SIZE[0], SHIP_SIZE[1])
         yellow_rect = pygame.Rect(ship_location[0], ship_location[1], SHIP_SIZE[0], SHIP_SIZE[1])
 
-        bullet_return = shoot_bullet(events)
+        bullet_return = shoot_bullet(events,sound=sound)
 
         if bullet_return is not None:
             red_bullet -= 1
@@ -151,6 +160,8 @@ def main():
             if red_rect.colliderect(bullet_rect):
                 if YELLOW_LIVES > 0:
                     YELLOW_LIVES -= 1
+                elif YELLOW_LIVES == 0:
+                    run=False
                 bullets_fired.remove(bullet)
 
                 # Update the lives display after a hit
@@ -177,6 +188,8 @@ def main():
             if yellow_rect.colliderect(bullet_rect):
                 if RED_LIVES > 0:
                     RED_LIVES -= 1
+                elif RED_LIVES == 0:
+                    run=False
                 yellow_bullets_fired.remove(bullet)
 
                 # Update the lives display after a hit
@@ -196,6 +209,15 @@ def main():
         # Delete bullets once they get to the end of the screen
         bullets_fired = [bullet for bullet in bullets_fired if bullet[1][0] < WIDTH]  # RED BULLETS
         yellow_bullets_fired = [bullet for bullet in yellow_bullets_fired if bullet[1][0] < WIDTH]
+    if RED_LIVES ==0:
+        screen.blit(COMPUTER_WON,(WIDTH//2-game_over.get_width()+75,HEIGHT//2)) # centerish display of text saying game over
+        pygame.display.update()
+        sleep(3)
+    elif YELLOW_LIVES == 0:
+        screen.blit(game_over,(WIDTH//2-game_over.get_width()+75,HEIGHT//2)) # centerish display of text saying game over
+        pygame.display.update()
+        sleep(3)
+    pygame.quit()
 
 
 if __name__ == "__main__":
